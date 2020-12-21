@@ -341,7 +341,8 @@
               },
               "appMenuClearsTask": true,
               "appMenuVisibleOnStartup": false,
-              "logoUrl": "/"
+              "logoUrl": "/",
+              "logoFormat":"png"
             }
         },
         {
