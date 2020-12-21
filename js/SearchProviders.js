@@ -458,6 +458,57 @@ function layerSearch(text, requestId, searchOptions, dispatch) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function banSearch(text, requestId, searchOptions, dispatch) {
+    axios.get("https://api-adresse.data.gouv.fr/search/?q="+ encodeURIComponent(text))
+    .then(response => dispatch(banSearchResults(response.data, requestId)));
+}
+
+function banSearchResults(obj, requestId) {
+    let results = [];
+    let currentResult = {
+        //idSearchProvider:'ban',
+        id:'ban',
+        //searchText: obj.query,
+        text: obj.query,
+        provider: obj.attribution,
+        //resultItems: []
+        items: []
+    };
+
+    (obj.features || []).map(item => {
+        //currentResult.resultItems.push(
+        currentResult.items.push(
+            {
+              //idResult:item.properties.id,
+              id:item.properties.id,
+              //labelResult:item.properties.label,
+              text:item.properties.label,
+              x:item.geometry.coordinates[0],
+              y:item.geometry.coordinates[1],
+              crs:"EPSG:4326"
+            }
+        );
+    });
+
+    results.push(currentResult);
+
+    console.log(obj);
+
+    console.log(results);
+
+    return addSearchResults({data: results, provider: "ban", reqId: requestId}, true);
+    
+}
+
+function banResultGeometry(resultItem, callback) {
+    //axios.get("https://api-adresse.data.gouv.fr/search/?q="+ encodeURIComponent(resultItem.labelResult)+"/geometry?id="+encodeURIComponent(resultItem.idResult))
+    axios.get("https://api-adresse.data.gouv.fr/search/?q="+ encodeURIComponent(resultItem.text)+"/geometry?id="+encodeURIComponent(resultItem.id))
+    .then(response => callback(resultItem,response.data,"EPSG:4326"));
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 module.exports = {
     SearchProviders: {
         "coordinates": {
@@ -492,6 +543,11 @@ module.exports = {
         "layers": {
             label: "Layers",
             onSearch: layerSearch
+        },
+        "ban": {
+            label: "Base Adresse Nationale (BAN)",
+            onSearch: banSearch,
+            getResultGeometry: banResultGeometry
         }
     },
     searchProviderFactory: (cfg) => {
